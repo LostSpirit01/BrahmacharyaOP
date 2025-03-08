@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incognito Mode Detector</title>
+    <style>
+        #incognitoPopup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            text-align: center;
+        }
+
+        #incognitoPopup button {
+            margin-top: 10px;
+            padding: 5px 10px;
+            background: red;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        #incognitoPopup button:hover {
+            background: darkred;
+        }
+    </style>
+</head>
+<body>
+
+<div id="incognitoPopup">
+    <p>You are browsing in Incognito Mode!</p>
+    <button onclick="closePopup()">Close</button>
+</div>
+
+<script>
+    async function isIncognito() {
+        return new Promise((resolve) => {
+            const fs = window.RequestFileSystem || window.webkitRequestFileSystem;
+            
+            if (!fs) {
+                // Check for Firefox Private Browsing
+                try {
+                    let db = indexedDB.open("test");
+                    db.onerror = () => resolve(true);  // Incognito blocks IndexedDB
+                    db.onsuccess = () => resolve(false);
+                } catch (e) {
+                    resolve(true);
+                }
+            } else {
+                // Chrome & Edge Incognito Detection
+                fs(window.TEMPORARY, 100, 
+                    () => resolve(false),  // Not incognito
+                    () => resolve(true)    // Incognito
+                );
+            }
+        });
+    }
+
+    function showPopup() {
+        document.getElementById("incognitoPopup").style.display = "block";
+    }
+
+    function closePopup() {
+        document.getElementById("incognitoPopup").style.display = "none";
+    }
+
+    isIncognito().then((incognito) => {
+        if (incognito) {
+            showPopup();  // Show popup only if the user is in Incognito Mode
+        }
+    });
+</script>
+
+</body>
+</html>
